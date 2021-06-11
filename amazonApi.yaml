@@ -1,0 +1,211 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Swagger Amazon API
+  description: Amazon API
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+paths:
+  /amazon:
+    post:
+      description: amazonデータの新規作成
+      operationId: addAmazon
+      requestBody:
+        description: 追加するamazonデータ
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Amazon"
+      responses:
+        "200":
+          description: amazon response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Amazon"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /amazon/{asin}:
+    get:
+      description: amazonデータをASINを指定して取得
+      operationId: findAmazonById
+      parameters:
+        - name: asin
+          in: path
+          description: 取得したいデータのASIN
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: amazon response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Amazon"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      description: amazonデータをASINを指定して更新
+      operationId: updateAmazon
+      parameters:
+        - name: asin
+          in: path
+          description: 更新したいデータのASIN
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: 更新するamazonデータ
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Amazon"
+      responses:
+        "200":
+          description: amazon response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Amazon"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      description: amazonデータをASINを指定して部分更新
+      operationId: patchAmazon
+      parameters:
+        - name: asin
+          in: path
+          description: 更新したいデータのASIN
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: 部分更新するamazonデータ
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AmazonPatch"
+      responses:
+        "200":
+          description: amazon response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Amazon"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      description: amazonデータをASINを指定して論理削除
+      operationId: deleteAmazon
+      parameters:
+        - name: asin
+          in: path
+          description: 削除したいデータのASIN
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: amazon deleted
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /amazon/active/{asin}:
+    patch:
+      description: 削除されたamazonデータをASINを指定して復元
+      operationId: undeleteAmazon
+      parameters:
+        - name: asin
+          in: path
+          description: 更新したいデータのASIN
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: amazon response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Amazon"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+#xなんとかでvalidationができる
+components:
+  schemas:
+    Amazon:
+      type: object
+      required:
+        - product_name
+        - maker_name
+        - price
+        - reason
+        - url
+        - asin
+      properties:
+        product_name:
+          type: string
+        maker_name:
+          type: string
+        price:
+          type: integer
+          format: int64
+        reason:
+          type: string
+        url:
+          type: string
+        asin:
+          type: string
+    AmazonPatch:
+      type: object
+      properties:
+        product_name:
+          type: string
+        maker_name:
+          type: string
+        price:
+          type: integer
+          format: int64
+        reason:
+          type: string
+        url:
+          type: string
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
