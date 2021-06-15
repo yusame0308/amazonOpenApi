@@ -39,7 +39,6 @@ func (p *Amazon) AddAmazon(ctx echo.Context) error {
 		Url:         amazon.Url,
 		CreatedAt:   now,
 		UpdatedAt:   now,
-		Status:      true,
 	})
 	return ctx.JSON(http.StatusCreated, amazon)
 }
@@ -71,7 +70,6 @@ func (p *Amazon) UpdateAmazon(ctx echo.Context, asin string) error {
 	// Update
 	now := time.Now()
 	p.db.Model(repository.AmazonData{}).
-		Where("status = ?", true).
 		Where("asin = ?", asin).
 		Updates(repository.AmazonData{
 			ProductName: amazon.ProductName,
@@ -115,7 +113,6 @@ func (p *Amazon) PatchAmazon(ctx echo.Context, asin string) error {
 	// Update
 	m.UpdatedAt = time.Now()
 	p.db.Model(m).
-		Where("status = ?", true).
 		Where("asin = ?", asin).
 		Updates(m)
 	return ctx.JSON(http.StatusOK, gen.Amazon{
@@ -129,15 +126,21 @@ func (p *Amazon) PatchAmazon(ctx echo.Context, asin string) error {
 }
 
 func (p *Amazon) DeleteAmazon(ctx echo.Context, asin string) error {
-	p.db.Model(repository.AmazonData{}).
+	tx := p.db.Model(repository.AmazonData{}).
 		Where("asin = ?", asin).
-		Update("status", false)
+		Update("is_delete", repository.DELETE)
+	if tx.Error != nil {
+		return sendError(ctx, http.StatusNotFound, tx.Error.Error())
+	}
 	return ctx.String(http.StatusNoContent, "")
 }
 
 func (p *Amazon) UndeleteAmazon(ctx echo.Context, asin string) error {
-	p.db.Model(repository.AmazonData{}).
+	tx := p.db.Unscoped().Model(repository.AmazonData{}).
 		Where("asin = ?", asin).
-		Update("status", true)
+		Update("is_delete", repository.NOT_DELETE)
+	if tx.Error != nil {
+		return sendError(ctx, http.StatusNotFound, tx.Error.Error())
+	}
 	return ctx.String(http.StatusNoContent, "")
 }
