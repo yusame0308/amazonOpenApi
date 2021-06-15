@@ -86,13 +86,58 @@ func (p *Amazon) UpdateAmazon(ctx echo.Context, asin string) error {
 }
 
 func (p *Amazon) PatchAmazon(ctx echo.Context, asin string) error {
-	return ctx.String(http.StatusOK, "ok")
+	// リクエストを取得
+	amazonPatch := new(gen.AmazonPatch)
+	err := ctx.Bind(amazonPatch)
+	if err != nil {
+		return sendError(ctx, http.StatusBadRequest, "Invalid format")
+	}
+	m := new(repository.AmazonData)
+	if tx := p.db.Model(m).First(m, "asin = ?", asin); tx.Error != nil {
+		return sendError(ctx, http.StatusBadRequest, tx.Error.Error())
+	}
+
+	if amazonPatch.MakerName != nil {
+		m.MakerName = *amazonPatch.MakerName
+	}
+	if amazonPatch.ProductName != nil {
+		m.ProductName = *amazonPatch.ProductName
+	}
+	if amazonPatch.Price != nil {
+		m.Price = *amazonPatch.Price
+	}
+	if amazonPatch.Reason != nil {
+		m.Reason = *amazonPatch.Reason
+	}
+	if amazonPatch.Url != nil {
+		m.Url = *amazonPatch.Url
+	}
+	// Update
+	m.UpdatedAt = time.Now()
+	p.db.Model(m).
+		Where("status = ?", true).
+		Where("asin = ?", asin).
+		Updates(m)
+	return ctx.JSON(http.StatusOK, gen.Amazon{
+		ProductName: m.ProductName,
+		MakerName:   m.MakerName,
+		Price:       m.Price,
+		Reason:      m.Reason,
+		Url:         m.Url,
+		Asin:        m.Asin,
+	})
 }
 
 func (p *Amazon) DeleteAmazon(ctx echo.Context, asin string) error {
-	return ctx.String(http.StatusOK, "ok")
+	p.db.Model(repository.AmazonData{}).
+		Where("asin = ?", asin).
+		Update("status", false)
+	return ctx.String(http.StatusNoContent, "")
 }
 
 func (p *Amazon) UndeleteAmazon(ctx echo.Context, asin string) error {
-	return ctx.String(http.StatusOK, "ok")
+	p.db.Model(repository.AmazonData{}).
+		Where("asin = ?", asin).
+		Update("status", true)
+	return ctx.String(http.StatusNoContent, "")
 }
