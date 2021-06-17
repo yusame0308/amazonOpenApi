@@ -158,7 +158,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-#xなんとかでvalidationができる
 components:
   schemas:
     Amazon:

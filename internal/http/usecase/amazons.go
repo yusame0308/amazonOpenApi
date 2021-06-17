@@ -27,7 +27,6 @@ func (p *Amazon) AddAmazon(ctx echo.Context) error {
 	if err != nil {
 		return sendError(ctx, http.StatusBadRequest, "Invalid format")
 	}
-	//（バリデーション）
 	// Create
 	now := time.Now()
 	p.db.Create(&repository.AmazonData{
